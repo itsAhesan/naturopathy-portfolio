@@ -38,6 +38,7 @@ Required variables:
 - SENDGRID_FROM_EMAIL
 - SENDGRID_TO_EMAIL
 - PORT (optional, default 3001)
+- VITE_API_BASE_URL (required for production builds)
 
 ### 3) Run the app
 
@@ -66,6 +67,23 @@ The Vite dev server proxies /api requests to http://localhost:3001.
 npm run build
 npm run preview
 ```
+
+## Deploy on Render
+
+This repo includes a render.yaml that provisions two services:
+
+- A Node web service for the contact API
+- A static site for the frontend
+
+Steps:
+
+1) In Render, click New > Blueprint and connect this GitHub repo.
+2) Apply the blueprint and wait for both services to be created.
+3) In the API service, set env vars: SENDGRID_API_KEY, SENDGRID_FROM_EMAIL, SENDGRID_TO_EMAIL.
+4) In the static site, set VITE_API_BASE_URL to the API service URL (for example: https://your-api-service.onrender.com).
+5) Redeploy the static site to pick up the env var.
+
+If you prefer manual setup, create a Node web service using npm run server and a static site using npm run build with dist as the publish directory.
 
 ## Security Notes
 

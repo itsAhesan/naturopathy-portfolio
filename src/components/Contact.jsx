@@ -62,6 +62,7 @@ function ContactForm({ isDark, t }) {
   const formRef = useRef(null)
   const [status, setStatus] = useState('idle') // idle | sending | success | error
   const [errors, setErrors] = useState({})
+  const apiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
   const inputBase = `w-full rounded-xl xs:rounded-2xl px-4 xs:px-5 py-3 xs:py-3.5 text-fluid-sm xs:text-fluid-base outline-none transition-all duration-300 border ${
     isDark
@@ -97,7 +98,7 @@ function ContactForm({ isDark, t }) {
     setStatus('sending')
 
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch(`${apiBase}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
