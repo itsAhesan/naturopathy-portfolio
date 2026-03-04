@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply font-sans text-gray-800 bg-cream-50 overflow-x-hidden;
+    font-size: clamp(0.9375rem, 0.875rem + 0.3125vw, 1.0625rem);
+    line-height: 1.65;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .dark body,
+  html.dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
+
+  ::selection {
+    @apply bg-forest-400/30 text-forest-800;
+  }
+
+  /* Prevent iOS zoom on input focus */
+  input, select, textarea {
+    font-size: 1rem;
+  }
+}
+
+@layer components {
+  /* Container: progressive padding per device tier */
+  .section-container {
+    @apply max-w-7xl mx-auto;
+    padding-left: 1.25rem;   /* 20px — phones */
+    padding-right: 1.25rem;
+  }
+  @media (min-width: 480px) {
+    .section-container {
+      padding-left: 1.5rem;  /* 24px — large phones */
+      padding-right: 1.5rem;
+    }
+  }
+  @media (min-width: 768px) {
+    .section-container {
+      padding-left: 2rem;    /* 32px — tablets */
+      padding-right: 2rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .section-container {
+      padding-left: 2.5rem;  /* 40px — laptops+ */
+      padding-right: 2.5rem;
+    }
+  }
+
+  /* Section vertical padding per tier */
+  .section-padding {
+    padding-top: 3.5rem;     /* 56px — phones */
+    padding-bottom: 3.5rem;
+  }
+  @media (min-width: 480px) {
+    .section-padding {
+      padding-top: 4rem;     /* 64px — large phones */
+      padding-bottom: 4rem;
+    }
+  }
+  @media (min-width: 768px) {
+    .section-padding {
+      padding-top: 5rem;     /* 80px — tablets */
+      padding-bottom: 5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .section-padding {
+      padding-top: 6.5rem;   /* 104px — laptops+ */
+      padding-bottom: 6.5rem;
+    }
+  }
+
+  .heading-primary {
+    @apply font-display font-semibold text-forest-700;
+    font-size: clamp(2.25rem, 1.75rem + 2.5vw, 3.5rem);
+    line-height: 1.1;
+  }
+
+  .heading-secondary {
+    @apply font-display font-semibold text-forest-700;
+    font-size: clamp(1.625rem, 1.25rem + 1.875vw, 2.5rem);
+    line-height: 1.2;
+  }
+
+  .heading-accent {
+    @apply font-medium tracking-[0.2em] uppercase text-forest-500;
+    font-size: clamp(0.8125rem, 0.75rem + 0.3125vw, 0.9375rem);
+  }
+
+  .text-body {
+    @apply text-gray-600 font-light leading-relaxed;
+    font-size: clamp(0.9375rem, 0.875rem + 0.3125vw, 1.125rem);
+    line-height: 1.7;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center
+           bg-forest-600 text-white font-medium rounded-full
+           hover:bg-forest-700 active:bg-forest-800
+           transition-all duration-300 ease-out
+           hover:shadow-lg hover:shadow-forest-600/25
+           focus:outline-none focus:ring-2 focus:ring-forest-500 focus:ring-offset-2;
+    font-size: clamp(0.9375rem, 0.875rem + 0.3125vw, 1.0625rem);
+    padding: 0.8125rem 1.75rem;
+    min-height: 48px;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center
+           border-2 border-forest-600 text-forest-700 font-medium rounded-full
+           hover:bg-forest-600 hover:text-white
+           transition-all duration-300 ease-out
+           focus:outline-none focus:ring-2 focus:ring-forest-500 focus:ring-offset-2;
+    font-size: clamp(0.9375rem, 0.875rem + 0.3125vw, 1.0625rem);
+    padding: 0.75rem 1.75rem;
+    min-height: 48px;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl
+           shadow-[0_4px_20px_rgba(0,0,0,0.04)]
+           hover:shadow-[0_8px_40px_rgba(0,0,0,0.08)]
+           transition-all duration-500 ease-out;
+    padding: clamp(1.25rem, 1rem + 1.25vw, 2rem);
+  }
+
+  .glass-card {
+    @apply bg-white/60 backdrop-blur-md rounded-2xl
+           border border-white/40
+           shadow-[0_4px_20px_rgba(0,0,0,0.04)];
+    padding: clamp(1.25rem, 1rem + 1.25vw, 2rem);
+  }
+
+  /* Minimum 44px touch target for accessibility */
+  .touch-target {
+    position: relative;
+  }
+  .touch-target::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@layer utilities {
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+
+  .animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-forest-600 via-forest-500 to-sage-500 bg-clip-text text-transparent;
+  }
+
+  .bg-nature-pattern {
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba(82, 183, 136, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(64, 145, 108, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(45, 106, 79, 0.04) 0%, transparent 50%);
+  }
+}
+
+/* Calendly overrides for better integration */
+.calendly-inline-widget {
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+/* Hide Calendly's default badge — we use custom floating buttons */
+.calendly-badge-widget {
+  display: none !important;
+}
