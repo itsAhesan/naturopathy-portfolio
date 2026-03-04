@@ -13,9 +13,8 @@ services:
         sync: false
       - key: SENDGRID_TO_EMAIL
         sync: false
-  - type: static
+  - type: static_site
     name: naturopathy-portfolio-web
-    env: static
     plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: dist
