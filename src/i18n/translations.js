@@ -31,7 +31,7 @@ export const translations = {
       p2: 'Every person who comes to me is unique, and so is their healing journey. I don\'t believe in one-size-fits-all treatments. Instead, I listen, I understand, and together we build a plan that actually works for your life.',
       h1: 'BNYS (Bachelor of Naturopathy & Yogic Sciences)',
       h2: 'Holistic Health Consultant',
-      h3: 'Holistic Physician — Diabetes, Thyroid, Obesity, Cardiology & Muscle Pain',
+      h3: 'Holistic Physician Specialization in — Diabetes, Thyroid, Obesity, Bronchial Asthma, Insomnia, Major Depressive Disorder, Chronic kidney disease (CKD), Ulcer, COPD, Cardiac Disease & Muscle Pain Management',
       h4: 'International patient consultations (UAE, UK, US)',
       h5: 'Personalized detox protocols',
       h6: 'Evidence-based natural treatment methods',
