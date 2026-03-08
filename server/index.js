@@ -1,6 +1,5 @@
 import express from 'express'
 import dotenv from 'dotenv'
-import cors from 'cors'
 import nodemailer from 'nodemailer'
 
 dotenv.config()
@@ -11,6 +10,9 @@ const port = process.env.PORT || 3001
 const defaultAllowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'https://drsmangal.com',
+  'https://www.drsmangal.com',
+  'https://naturopathy-portfolio.onrender.com',
 ]
 
 const envAllowedOrigins = String(process.env.CORS_ORIGINS || '')
@@ -26,26 +28,26 @@ function normalizeOrigin(origin) {
 
 const normalizedAllowedOrigins = new Set(allowedOrigins.map((origin) => normalizeOrigin(origin)))
 
-const corsOptions = {
-  origin(origin, callback) {
-    // Allow server-to-server tools (no Origin header) and same-origin requests.
-    if (!origin) return callback(null, true)
-
-    if (normalizedAllowedOrigins.has(normalizeOrigin(origin))) {
-      return callback(null, true)
-    }
-
-    return callback(new Error('Not allowed by CORS'))
-  },
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 204,
-}
-
 // Apply CORS before JSON parsing so preflight and parser errors still include CORS headers.
-app.use(cors(corsOptions))
-app.options('*', cors(corsOptions))
+app.use((req, res, next) => {
+  const origin = normalizeOrigin(req.headers.origin)
+  const isAllowedOrigin = origin && normalizedAllowedOrigins.has(origin)
+
+  if (isAllowedOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Vary', 'Origin')
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(isAllowedOrigin ? 204 : 403)
+  }
+
+  return next()
+})
 // Parse JSON request bodies from the contact form.
 app.use(express.json({ limit: '100kb' }))
 
