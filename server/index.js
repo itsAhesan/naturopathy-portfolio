@@ -59,8 +59,14 @@ const {
   ADMIN_EMAIL,
 } = process.env
 
+const smtpHost = String(EMAIL_HOST || '').trim()
+const smtpPort = Number(String(EMAIL_PORT || '').trim())
+const smtpUser = String(EMAIL_USER || '').trim()
+const smtpPass = String(EMAIL_PASS || '').trim()
+const adminEmail = String(ADMIN_EMAIL || '').trim()
+
 const hasMailConfig = Boolean(
-  EMAIL_HOST && EMAIL_PORT && EMAIL_USER && EMAIL_PASS && ADMIN_EMAIL,
+  smtpHost && smtpPort && smtpUser && smtpPass && adminEmail,
 )
 
 if (!hasMailConfig) {
@@ -69,12 +75,18 @@ if (!hasMailConfig) {
 
 // SMTP transporter used for both admin and user emails.
 const transporter = nodemailer.createTransport({
-  host: EMAIL_HOST,
-  port: Number(EMAIL_PORT),
-  secure: Number(EMAIL_PORT) === 465,
+  host: smtpHost,
+  port: smtpPort,
+  secure: smtpPort === 465,
+  requireTLS: smtpPort !== 465,
+  // Render/Gmail sometimes resolve IPv6 first; forcing IPv4 can avoid ETIMEDOUT on connect.
+  family: 4,
+  connectionTimeout: 20000,
+  greetingTimeout: 15000,
+  socketTimeout: 30000,
   auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
+    user: smtpUser,
+    pass: smtpPass,
   },
 })
 
@@ -274,8 +286,8 @@ app.post('/api/contact', async (req, res) => {
   try {
     // Email 1: Notify admin about the incoming contact request.
     await transporter.sendMail({
-      from: EMAIL_USER,
-      to: ADMIN_EMAIL,
+      from: smtpUser,
+      to: adminEmail,
       replyTo: trimmedEmail,
       subject: 'New Contact Form Submission',
       text: adminBody,
@@ -283,7 +295,7 @@ app.post('/api/contact', async (req, res) => {
 
     // Email 2: Confirm to the user that we received the message.
     await transporter.sendMail({
-      from: EMAIL_USER,
+      from: smtpUser,
       to: trimmedEmail,
       subject: 'Thank you for your message',
       text: userBody,
