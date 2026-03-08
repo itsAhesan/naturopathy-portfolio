@@ -61,9 +61,13 @@ const {
 
 const smtpHost = String(EMAIL_HOST || '').trim()
 const smtpPort = Number(String(EMAIL_PORT || '').trim())
+const smtpFallbackPortFromEnv = Number(String(process.env.EMAIL_FALLBACK_PORT || '').trim())
 const smtpUser = String(EMAIL_USER || '').trim()
 const smtpPass = String(EMAIL_PASS || '').trim()
 const adminEmail = String(ADMIN_EMAIL || '').trim()
+const smtpFallbackPort = Number.isFinite(smtpFallbackPortFromEnv) && smtpFallbackPortFromEnv > 0
+  ? smtpFallbackPortFromEnv
+  : smtpPort === 465 ? 587 : 465
 
 const hasMailConfig = Boolean(
   smtpHost && smtpPort && smtpUser && smtpPass && adminEmail,
@@ -73,22 +77,45 @@ if (!hasMailConfig) {
   console.warn('Missing SMTP environment variables. Email sending is disabled.')
 }
 
-// SMTP transporter used for both admin and user emails.
-const transporter = nodemailer.createTransport({
-  host: smtpHost,
-  port: smtpPort,
-  secure: smtpPort === 465,
-  requireTLS: smtpPort !== 465,
-  // Render/Gmail sometimes resolve IPv6 first; forcing IPv4 can avoid ETIMEDOUT on connect.
-  family: 4,
-  connectionTimeout: 20000,
-  greetingTimeout: 15000,
-  socketTimeout: 30000,
-  auth: {
-    user: smtpUser,
-    pass: smtpPass,
-  },
-})
+function createTransporter(portValue) {
+  return nodemailer.createTransport({
+    host: smtpHost,
+    port: portValue,
+    secure: portValue === 465,
+    requireTLS: portValue !== 465,
+    // Render/Gmail sometimes resolve IPv6 first; forcing IPv4 can avoid ETIMEDOUT on connect.
+    family: 4,
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  })
+}
+
+const primaryTransporter = createTransporter(smtpPort)
+const fallbackTransporter = smtpFallbackPort !== smtpPort ? createTransporter(smtpFallbackPort) : null
+
+function shouldRetryWithFallback(error) {
+  const code = String(error?.code || '')
+  const command = String(error?.command || '')
+  return code === 'ETIMEDOUT' || code === 'ESOCKET' || command === 'CONN'
+}
+
+async function sendMailWithFallback(mailOptions) {
+  try {
+    return await primaryTransporter.sendMail(mailOptions)
+  } catch (error) {
+    if (!fallbackTransporter || !shouldRetryWithFallback(error)) {
+      throw error
+    }
+
+    console.warn(`Primary SMTP send failed (${smtpPort}). Retrying on fallback port ${smtpFallbackPort}.`)
+    return fallbackTransporter.sendMail(mailOptions)
+  }
+}
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim())
@@ -283,36 +310,35 @@ app.post('/api/contact', async (req, res) => {
   </body>
 </html>`.trim()
 
-  try {
-    // Email 1: Notify admin about the incoming contact request.
-    await transporter.sendMail({
-      from: smtpUser,
-      to: adminEmail,
-      replyTo: trimmedEmail,
-      subject: 'New Contact Form Submission',
-      text: adminBody,
-    })
+  // Respond immediately to keep UI fast, then send emails in background.
+  res.json({
+    success: true,
+    message: 'Message received successfully',
+  })
 
-    // Email 2: Confirm to the user that we received the message.
-    await transporter.sendMail({
-      from: smtpUser,
-      to: trimmedEmail,
-      subject: 'Thank you for your message',
-      text: userBody,
-      html: userHtml,
-    })
+  setImmediate(async () => {
+    try {
+      // Email 1: Notify admin about the incoming contact request.
+      await sendMailWithFallback({
+        from: smtpUser,
+        to: adminEmail,
+        replyTo: trimmedEmail,
+        subject: 'New Contact Form Submission',
+        text: adminBody,
+      })
 
-    return res.json({
-      success: true,
-      message: 'Message sent successfully',
-    })
-  } catch (error) {
-    console.error('Email sending error:', error)
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to send message',
-    })
-  }
+      // Email 2: Confirm to the user that we received the message.
+      await sendMailWithFallback({
+        from: smtpUser,
+        to: trimmedEmail,
+        subject: 'Thank you for your message',
+        text: userBody,
+        html: userHtml,
+      })
+    } catch (error) {
+      console.error('Email sending error:', error)
+    }
+  })
 })
 
 app.listen(port, () => {
