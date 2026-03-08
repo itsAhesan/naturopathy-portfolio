@@ -1,19 +1,19 @@
 # Naturopathy Portfolio
 
-A modern, multilingual portfolio and consultation site for a naturopathy practice. The frontend is built with React + Vite + Tailwind CSS, and a lightweight Express server handles contact form submissions via SendGrid.
+A modern, multilingual portfolio and consultation site for a naturopathy practice. The frontend is built with React + Vite + Tailwind CSS, and a lightweight Express server handles contact form submissions via Nodemailer (SMTP).
 
 ## Features
 
 - Responsive, single-page experience with lazy-loaded sections
 - Multilingual content with language context
 - Themed UI with Tailwind CSS
-- Contact form with validation and SendGrid email delivery
+- Contact form with validation and SMTP email delivery
 - Simple health check endpoint for server monitoring
 
 ## Tech Stack
 
 - Frontend: React 18, Vite 6, Tailwind CSS 3
-- Backend: Express 4, SendGrid Mail
+- Backend: Express 4, Nodemailer
 - Tooling: PostCSS, Autoprefixer
 
 ## Getting Started
@@ -34,9 +34,11 @@ cp .env.example .env
 
 Required variables:
 
-- SENDGRID_API_KEY
-- SENDGRID_FROM_EMAIL
-- SENDGRID_TO_EMAIL
+- EMAIL_HOST
+- EMAIL_PORT
+- EMAIL_USER
+- EMAIL_PASS
+- ADMIN_EMAIL
 - PORT (optional, default 3001)
 - VITE_API_BASE_URL (required for production builds)
 
@@ -79,7 +81,7 @@ Steps:
 
 1) In Render, click New > Blueprint and connect this GitHub repo.
 2) Apply the blueprint and wait for both services to be created.
-3) In the API service, set env vars: SENDGRID_API_KEY, SENDGRID_FROM_EMAIL, SENDGRID_TO_EMAIL.
+3) In the API service, set env vars: EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, ADMIN_EMAIL.
 4) In the static site, set VITE_API_BASE_URL to the API service URL (for example: https://your-api-service.onrender.com).
 5) Redeploy the static site to pick up the env var.
 

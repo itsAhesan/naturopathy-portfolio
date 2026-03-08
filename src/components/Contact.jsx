@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { PhoneIcon, MailIcon } from './Icons'
 import { useTheme } from '../context/ThemeContext'
@@ -58,11 +58,31 @@ function SpinnerIcon({ className }) {
   )
 }
 
+const COUNTRY_PHONE_RULES = [
+  { code: '+91', country: 'India', min: 10, max: 10, example: '6295142789' },
+  { code: '+1', country: 'USA/Canada', min: 10, max: 10, example: '4155552671' },
+  { code: '+44', country: 'United Kingdom', min: 9, max: 10, example: '7400123456' },
+  { code: '+61', country: 'Australia', min: 9, max: 9, example: '412345678' },
+  { code: '+49', country: 'Germany', min: 10, max: 11, example: '15123456789' },
+  { code: '+33', country: 'France', min: 9, max: 9, example: '612345678' },
+  { code: '+34', country: 'Spain', min: 9, max: 9, example: '612345678' },
+  { code: '+971', country: 'UAE', min: 9, max: 9, example: '501234567' },
+  { code: '+966', country: 'Saudi Arabia', min: 9, max: 9, example: '501234567' },
+  { code: '+65', country: 'Singapore', min: 8, max: 8, example: '81234567' },
+]
+
 function ContactForm({ isDark, t }) {
   const formRef = useRef(null)
   const [status, setStatus] = useState('idle') // idle | sending | success | error
   const [errors, setErrors] = useState({})
-  const apiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+91')
+  const [isPhoneCodeOpen, setIsPhoneCodeOpen] = useState(false)
+  const phoneCodeDropdownRef = useRef(null)
+  const rawApiBase = String(import.meta.env.VITE_API_BASE_URL || '').trim()
+  // Use Vite proxy in local dev if env value is empty or still a placeholder.
+  const apiBase = (!rawApiBase || rawApiBase.includes('your-api-service.onrender.com'))
+    ? ''
+    : rawApiBase.replace(/\/$/, '')
 
   const inputBase = `w-full rounded-xl xs:rounded-2xl px-4 xs:px-5 py-3 xs:py-3.5 text-fluid-sm xs:text-fluid-base outline-none transition-all duration-300 border ${
     isDark
@@ -72,10 +92,55 @@ function ContactForm({ isDark, t }) {
 
   const labelClass = `block text-fluid-xs xs:text-fluid-sm font-medium mb-1.5 xs:mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`
 
+  useEffect(() => {
+    function handleOutsideClick(event) {
+      if (!phoneCodeDropdownRef.current?.contains(event.target)) {
+        setIsPhoneCodeOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+    }
+  }, [])
+
+  function getPhoneRuleByCode(countryCode) {
+    return COUNTRY_PHONE_RULES.find((rule) => rule.code === countryCode) || COUNTRY_PHONE_RULES[0]
+  }
+
+  function normalizeDigits(value) {
+    return String(value || '').replace(/\D/g, '')
+  }
+
+  function buildInternationalPhone(localPhone, countryCode) {
+    const localDigits = normalizeDigits(localPhone)
+    if (!localDigits) return ''
+    return `${countryCode} ${localDigits}`
+  }
+
+  function isValidPhoneByCountry(localPhone, countryCode) {
+    const digits = normalizeDigits(localPhone)
+    if (!digits) return true
+
+    const rule = getPhoneRuleByCode(countryCode)
+    if (digits.length < rule.min || digits.length > rule.max) return false
+    if (/^0+$/.test(digits)) return false
+
+    return true
+  }
+
+  const currentPhoneRule = getPhoneRuleByCode(phoneCountryCode)
+  const phoneErrorCopyRaw = t('contact.form.phoneInvalid')
+  const phoneErrorCopy = typeof phoneErrorCopyRaw === 'string' && !phoneErrorCopyRaw.startsWith('contact.form.')
+    ? phoneErrorCopyRaw
+    : `Please enter a valid phone number for ${currentPhoneRule.country} (${currentPhoneRule.code}).`
+
   function validate(data) {
     const errs = {}
     if (!data.name.trim()) errs.name = true
     if (!data.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errs.email = true
+    if (data.phone && !isValidPhoneByCountry(data.phone, data.phoneCountryCode)) errs.phone = true
     if (!data.message.trim()) errs.message = true
     return errs
   }
@@ -88,7 +153,13 @@ function ContactForm({ isDark, t }) {
       name: formData.get('name') || '',
       email: formData.get('email') || '',
       phone: formData.get('phone') || '',
+      phoneCountryCode,
       message: formData.get('message') || '',
+    }
+
+    const payload = {
+      ...data,
+      phone: buildInternationalPhone(data.phone, data.phoneCountryCode),
     }
 
     const errs = validate(data)
@@ -103,16 +174,21 @@ function ContactForm({ isDark, t }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       })
 
-      if (!res.ok) throw new Error('Request failed')
-
-      const result = await res.json()
+      const result = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        if (Array.isArray(result?.invalidFields) && result.invalidFields.includes('phone')) {
+          setErrors(prev => ({ ...prev, phone: true }))
+        }
+        throw new Error('Request failed')
+      }
 
       if (result?.success) {
         setStatus('success')
         form.reset()
+        setPhoneCountryCode('+91')
         setTimeout(() => setStatus('idle'), 5000)
       } else {
         setStatus('error')
@@ -173,13 +249,63 @@ function ContactForm({ isDark, t }) {
 
       <div>
         <label htmlFor="contact-phone" className={labelClass}>{t('contact.form.phone')}</label>
-        <input
-          id="contact-phone"
-          name="phone"
-          type="tel"
-          placeholder={t('contact.form.phonePh')}
-          className={inputBase}
-        />
+        <div className="grid grid-cols-1 xs:grid-cols-[110px,1fr] gap-2.5 xs:gap-3">
+          <div ref={phoneCodeDropdownRef} className="relative">
+            <button
+              type="button"
+              aria-label="Country code"
+              aria-haspopup="listbox"
+              aria-expanded={isPhoneCodeOpen}
+              onClick={() => setIsPhoneCodeOpen(prev => !prev)}
+              className={`${inputBase} ${errors.phone ? errorRing : ''} px-3 xs:px-3.5 flex items-center justify-between`}
+            >
+              <span className="font-medium">{phoneCountryCode}</span>
+              <svg className={`w-4 h-4 transition-transform ${isPhoneCodeOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 7l5 5 5-5" />
+              </svg>
+            </button>
+
+            {isPhoneCodeOpen && (
+              <div
+                role="listbox"
+                className={`absolute z-30 mt-1 w-64 max-h-60 overflow-auto rounded-xl border shadow-xl ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-forest-200'}`}
+              >
+                {COUNTRY_PHONE_RULES.map((rule) => (
+                  <button
+                    key={rule.code}
+                    type="button"
+                    onClick={() => {
+                      setPhoneCountryCode(rule.code)
+                      setIsPhoneCodeOpen(false)
+                      if (errors.phone) setErrors(prev => ({ ...prev, phone: false }))
+                    }}
+                    className={`w-full text-left px-3.5 py-2.5 text-fluid-sm transition-colors ${phoneCountryCode === rule.code
+                      ? isDark ? 'bg-forest-900/40 text-forest-300' : 'bg-forest-50 text-forest-700'
+                      : isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-forest-50/60'}`}
+                  >
+                    {`${rule.code} - ${rule.country}`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <input
+            id="contact-phone"
+            name="phone"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel-national"
+            maxLength={16}
+            placeholder={currentPhoneRule.example}
+            className={`${inputBase} ${errors.phone ? errorRing : ''}`}
+            onChange={() => errors.phone && setErrors(prev => ({ ...prev, phone: false }))}
+          />
+        </div>
+        {errors.phone && (
+          <p className={`mt-1.5 text-fluid-xs ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+            {phoneErrorCopy}
+          </p>
+        )}
       </div>
 
       <div>

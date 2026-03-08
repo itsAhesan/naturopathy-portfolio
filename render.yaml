@@ -7,11 +7,19 @@ services:
     startCommand: npm run server
     healthCheckPath: /api/health
     envVars:
-      - key: SENDGRID_API_KEY
+      - key: EMAIL_HOST
         sync: false
-      - key: SENDGRID_FROM_EMAIL
+      - key: EMAIL_PORT
         sync: false
-      - key: SENDGRID_TO_EMAIL
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PORT
         sync: false
   - type: static
     name: naturopathy-portfolio-web

@@ -10,10 +10,10 @@ export const translations = {
     },
     hero: {
       badge: 'Now Accepting International Patients',
-      heading1: 'Heal Naturally,',
+      heading1: 'Heal Naturally',
       heading2: 'Live Fully',
       sub: 'Personalized naturopathy consultations combining ancient wisdom with modern science. Transform your health through customized healing protocols.',
-      cta1: 'Book Free Consultation',
+      cta1: 'Book Consultation',
       cta2: 'Explore Services',
       stat1num: '5000+',
       stat1: 'Patients Healed',

@@ -10,7 +10,7 @@ export default function Booking() {
   const { t } = useLanguage()
   const calRef = useRef(null)
 
-  const benefits = [t('booking.b1'), t('booking.b2'), t('booking.b3'), t('booking.b4')]
+  const benefits = [t('booking.b2'), t('booking.b3'), t('booking.b4')]
 
   // Load the Calendly inline widget natively using data-url
   useEffect(() => {
@@ -36,8 +36,8 @@ export default function Booking() {
             <p className={`text-body ${isDark ? '!text-gray-400' : ''}`}>{t('booking.sub')}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-3 gap-6 xs:gap-8 lg:gap-12 items-start">
-            <div className="md:col-span-2 lg:col-span-1 order-2 md:order-1">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 xs:gap-8 lg:gap-10 items-start">
+            <div className="md:col-span-4 lg:col-span-4 order-2 md:order-1 self-start md:pt-10">
               <div className="card !bg-forest-700 !text-white md:sticky md:top-24">
                 <div className="flex items-center gap-3 mb-5 xs:mb-6">
                   <div className="w-10 h-10 xs:w-11 xs:h-11 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
@@ -62,7 +62,7 @@ export default function Booking() {
                   <h4 className="font-medium text-forest-200 mb-2.5 xs:mb-3 text-fluid-sm">{t('booking.typesTitle')}</h4>
                   <div className="space-y-2.5 xs:space-y-3">
                     {[
-                      { name: t('booking.t1name'), info: t('booking.t1info') },
+                      
                       { name: t('booking.t2name'), info: t('booking.t2info') },
                       { name: t('booking.t3name'), info: t('booking.t3info') },
                     ].map((type) => (
@@ -77,8 +77,8 @@ export default function Booking() {
             </div>
 
             {/* Native Calendly inline widget embed */}
-            <div className="md:col-span-3 lg:col-span-2 order-1 md:order-2">
-              <div className={`rounded-2xl overflow-hidden relative ${isDark ? 'shadow-[0_4px_20px_rgba(0,0,0,0.3)]' : 'shadow-[0_4px_20px_rgba(0,0,0,0.04)]'}`}>
+            <div className="md:col-span-8 lg:col-span-8 order-1 md:order-2 self-start">
+              <div className={`w-full rounded-2xl overflow-hidden relative ${isDark ? 'shadow-[0_4px_20px_rgba(0,0,0,0.3)]' : 'shadow-[0_4px_20px_rgba(0,0,0,0.04)]'}`}>
                 {/* Fallback content shown behind the iframe while it loads or if it fails */}
                 <div className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 ${isDark ? 'bg-gray-800' : 'bg-forest-50'}`}>
                   <CalendarIcon className={`w-12 h-12 mb-4 ${isDark ? 'text-forest-500' : 'text-forest-300'}`} />

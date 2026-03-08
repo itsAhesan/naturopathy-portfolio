@@ -150,7 +150,7 @@ export default function Hero() {
             style={{ fontSize: 'clamp(1.875rem, 1.25rem + 3.125vw, 4.5rem)', lineHeight: '1.08' }}
           >
             {t('hero.heading1')}{' '}
-            <span className="text-gradient">{t('hero.heading2')}</span>
+            <div className="text-gradient">{t('hero.heading2')}</div>
           </h1>
 
           <p
